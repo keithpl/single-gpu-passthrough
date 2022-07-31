@@ -191,3 +191,10 @@ overhead.
   <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
 </interface>
 ```
+
+5. Do not expose the hypervisor to the guest.
+```xml
+<cpu mode='host-model' check='partial'>
+  <feature policy='disable' name='hypervisor'/>
+</cpu>
+```
