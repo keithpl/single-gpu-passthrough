@@ -96,8 +96,13 @@ options vfio-pci disable_vga=1
 
 ## Install QEMU, Libvirt, etc.
 ```
-pacman -S qemu libvirt edk2-ovmf dnsmasq dmidecode iptables-nft swtpm
-systemctl enable libvirtd --now
+# sudo pacman -S qemu libvirt edk2-ovmf dnsmasq dmidecode iptables-nft swtpm
+# sudo systemctl enable libvirtd --now
+```
+
+You may also optionally install `virt-manager`, a GUI frontend.
+```
+# sudo pacman -S virt-manager
 ```
 
 ## Install Libvirtd QEMU Hook
@@ -111,4 +116,64 @@ configured for "win11": `if [[ "$1" == "win11" ]]`
 # sudo chmod u+x /etc/libvirt/hooks/qemu
 ```
 
+## Edit GPU vBIOS
+> With my setup this section is no longer necessary, I will leave this step here
+for informational purposes.
 
+1. Obtain a dump of your GPU's vBIOS.
+> This can be done by extracting it from the card directly via a utility such
+as nvflash, or downloading the image from the internet.
+2. Open the vBIOS image with a hex editor and locate a string starting with
+`0x55 (U)` containing `VIDEO`, it may look similar to `U.w.K7400.L.w.VIDEO`
+3. Delete all bytes _preceeding_ the `0x55 (U)` byte in the image.
+(around 160Kbytes should be removed)
+4. Save a modified copy in `/usr/share/qemu`
+> For the sake of this document, the full path will be assumed as
+`/usr/share/qemu/gpu-passthrough.rom`
+
+## Creating and Running the Guest
+Virtual Machine (VM) creation is covered in several other guides. I'll call
+out some "gotchas" and recommendations.
+
+1. The edited GPU vBIOS needs to be passed through to the guest on the VGA
+controller.
+> With my setup this section is no longer necessary, I will leave this step here
+for informational purposes.
+```
+<hostdev mode="subsystem" type="pci" managed="yes">
+  <source>
+    <address domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+  </source>
+  <rom file='/usr/share/qemu/gpu-passthrough.rom'/>
+  <address type="pci" domain="0x0000" bus="0x03" slot="0x00" function="0x0"/>
+</hostdev>
+```
+
+2. Pin guest vCPUs.
+```
+<cputune>
+  <vcpupin vcpu='0' cpuset='0'/>
+  <vcpupin vcpu='1' cpuset='1'/>
+  <vcpupin vcpu='2' cpuset='2'/>
+  <vcpupin vcpu='3' cpuset='3'/>
+  <vcpupin vcpu='4' cpuset='4'/>
+  <vcpupin vcpu='5' cpuset='5'/>
+  <vcpupin vcpu='6' cpuset='6'/>
+  <vcpupin vcpu='7' cpuset='7'/>
+  <vcpupin vcpu='8' cpuset='8'/>
+  <vcpupin vcpu='9' cpuset='9'/>
+  <vcpupin vcpu='10' cpuset='10'/>
+  <vcpupin vcpu='11' cpuset='11'/>
+  <vcpupin vcpu='12' cpuset='12'/>
+  <vcpupin vcpu='13' cpuset='13'/>
+  <vcpupin vcpu='14' cpuset='14'/>
+  <vcpupin vcpu='15' cpuset='15'/>
+  <emulatorpin cpuset='16-23'/>
+</cputune>
+```
+
+3. Disable VirtIO memory ballooning.
+> Memory ballooning can cause major performance issues with VFIO setups.
+```
+<memballoon model="none"/>
+```
