@@ -110,10 +110,12 @@ You may also optionally install `virt-manager`, a GUI frontend.
 configured for "win11".
 
 2. Copy the libvirtd qemu hook into the correct location
+> Make sure you restart libvirtd when adding/removing hooks.
 ```
 # sudo mkdir -p /etc/libvirt/hooks
 # sudo cp -v ./qemu /etc/libvirt/hooks
 # sudo chmod u+x /etc/libvirt/hooks/qemu
+# sudo systemctl restart libvirtd
 ```
 
 ## Edit GPU vBIOS
