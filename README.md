@@ -107,7 +107,7 @@ You may also optionally install `virt-manager`, a GUI frontend.
 
 ## Install Libvirtd QEMU Hook
 1. Edit the `qemu` hook to reflect the name of your guest, by default it's
-configured for "win11": `if [[ "$1" == "win11" ]]`
+configured for "win11".
 
 2. Copy the libvirtd qemu hook into the correct location
 ```
@@ -139,7 +139,7 @@ out some "gotchas" and recommendations.
 controller.
 > With my setup this section is no longer necessary, I will leave this step here
 for informational purposes.
-```
+```xml
 <hostdev mode="subsystem" type="pci" managed="yes">
   <source>
     <address domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
@@ -150,7 +150,7 @@ for informational purposes.
 ```
 
 2. Pin guest vCPUs.
-```
+```xml
 <cputune>
   <vcpupin vcpu='0' cpuset='0'/>
   <vcpupin vcpu='1' cpuset='1'/>
@@ -174,6 +174,18 @@ for informational purposes.
 
 3. Disable VirtIO memory ballooning.
 > Memory ballooning can cause major performance issues with VFIO setups.
-```
+```xml
 <memballoon model="none"/>
+```
+
+4. Use a macvtap interface instead of a linux bridge to reduce networking
+overhead.
+```xml
+<interface type='direct'>
+  <mac address='52:54:00:a3:d3:f4'/>
+  <source dev='enp7s0f0' mode='bridge'/>
+  <model type='virtio'/>
+  <link state='up'/>
+  <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+</interface>
 ```
