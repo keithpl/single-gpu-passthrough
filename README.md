@@ -6,7 +6,7 @@ These notes are specifically for my setup:
   * Intel Core i9-12900KF
   * EVGA NVIDIA RTX 2080Ti (vBIOS: 90.02.30.00.98)
   * Samsung 870 EVO Plus
-  * Intel X710 10Gb SFP+
+  * Intel X710 10Gb SFP+ (exposed with macvtap)
 
   If your hardware or linux distribution differs, you will likely need to
   adjust some of these steps and/or configurations.
@@ -93,3 +93,22 @@ even devices you do not want to passthrough to a guest.
 options vfio-pci ids=10de:1e07,10de:10f7,10de:1ad6,10de:1ad7,8086:7a84,8086:7ad0,8086:7aa3,8086:7aa4,144d:a808
 options vfio-pci disable_vga=1
 ```
+
+## Install QEMU, Libvirt, etc.
+```
+pacman -S qemu libvirt edk2-ovmf dnsmasq dmidecode iptables-nft swtpm
+systemctl enable libvirtd --now
+```
+
+## Install Libvirtd QEMU Hook
+1. Edit the `qemu` hook to reflect the name of your guest, by default it's
+configured for "win11": `if [[ "$1" == "win11" ]]`
+
+2. Copy the libvirtd qemu hook into the correct location
+```
+# sudo mkdir -p /etc/libvirt/hooks
+# sudo cp -v ./qemu /etc/libvirt/hooks
+# sudo chmod u+x /etc/libvirt/hooks/qemu
+```
+
+
