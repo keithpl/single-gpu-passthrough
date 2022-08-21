@@ -7,101 +7,102 @@ host_cpus_all="0-23"
 host_cpus_limited="16-23"
 
 nvidia_modules=(
-  "nvidia_uvm"
-  "nvidia_drm"
-  "nvidia_modeset"
-  "nvidia"
+	"nvidia_uvm"
+	"nvidia_drm"
+	"nvidia_modeset"
+	"nvidia"
 )
 
 vfio_modules=(
-  "vfio_iommu_type1"
-  "vfio_pci"
-  "vfio"
+	"vfio_iommu_type1"
+	"vfio_pci"
+	"vfio"
 )
 
 node_devices=(
-  "pci_0000_01_00_0"
-  "pci_0000_01_00_1"
-  "pci_0000_01_00_2"
-  "pci_0000_01_00_3"
-  "pci_0000_00_1f_0"
-  "pci_0000_00_1f_3"
-  "pci_0000_00_1f_4"
-  "pci_0000_00_1f_5"
+	"pci_0000_01_00_0"
+	"pci_0000_01_00_1"
+	"pci_0000_01_00_2"
+	"pci_0000_01_00_3"
+	"pci_0000_00_1f_0"
+	"pci_0000_00_1f_3"
+	"pci_0000_00_1f_4"
+	"pci_0000_00_1f_5"
 )
 
-function host_allowed_cpus() {
-  if [[ "$#" == 0 ]]; then
-    return 1
-  fi
+host_allowed_cpus() {
+	if [[ "$#" == 0 ]]; then
+		return 1
+	fi
 
-  systemctl set-property --runtime -- user.slice    AllowedCPUs=$1
-  systemctl set-property --runtime -- system.slice  AllowedCPUs=$1
-  systemctl set-property --runtime -- init.slice    AllowedCPUs=$1
+	systemctl set-property --runtime -- user.slice    AllowedCPUs="$1"
+	systemctl set-property --runtime -- system.slice  AllowedCPUs="$1"
+	systemctl set-property --runtime -- init.slice    AllowedCPUs="$1"
 }
 
-function vtcon_binding() {
-  if [[ "$#" == 0 ]]; then
-    return 1
-  fi
+vtcon_binding() {
+	if [[ "$#" == 0 ]]; then
+		return 1
+	fi
 
-  for vtcon in /sys/class/vtconsole/vtcon*; do
-    echo "$1" > $vtcon/bind
-  done
+	for vtcon in /sys/class/vtconsole/vtcon*; do
+		echo "$1" > "$vtcon/bind"
+	done
 }
 
-function efifb_binding() {
-  if [[ "$#" == 0 ]]; then
-    return 1
-  fi
+efifb_binding() {
+	if [[ "$#" == 0 ]]; then
+		return 1
+	fi
 
-  echo "efi-framebuffer.0" > /sys/bus/platform/drivers/efi-framebuffer/$1
+	echo "efi-framebuffer.0" > \
+		"/sys/bus/platform/drivers/efi-framebuffer/$1"
 }
 
-function modprobe_ensure() {
-  if [[ "$#" == 0 ]]; then
-    return 1
-  fi
+modprobe_ensure() {
+	if [[ "$#" == 0 ]]; then
+		return 1
+	fi
 
-  while ! modprobe "$@"; do
-    sleep 0.1
-  done
+	while ! modprobe "$@"; do
+		sleep 0.1
+	done
 }
 
-function guest_prepare() {
-  systemctl stop display-manager
-  vtcon_binding 0
-  efifb_binding unbind
-  host_allowed_cpus "$host_cpus_limited"
+guest_prepare() {
+	systemctl stop display-manager
+	vtcon_binding 0
+	efifb_binding unbind
+	host_allowed_cpus "$host_cpus_limited"
 
-  for i in "${nvidia_modules[@]}"; do modprobe_ensure -r "$i"; done
-  for i in "${node_devices[@]}"; do virsh nodedev-detach "$i"; done
-  for i in "${vfio_modules[@]}"; do modprobe "$i"; done
+	for i in "${nvidia_modules[@]}"; do modprobe_ensure -r "$i"; done
+	for i in "${node_devices[@]}"; do virsh nodedev-detach "$i"; done
+	for i in "${vfio_modules[@]}"; do modprobe "$i"; done
 }
 
-function guest_release() {
-  for i in "${vfio_modules[@]}"; do modprobe_ensure -r "$i"; done
-  for i in "${node_devices[@]}"; do virsh nodedev-reattach "$i"; done
-  for i in "${nvidia_modules[@]}"; do modprobe "$i"; done
+guest_release() {
+	for i in "${vfio_modules[@]}"; do modprobe_ensure -r "$i"; done
+	for i in "${node_devices[@]}"; do virsh nodedev-reattach "$i"; done
+	for i in "${nvidia_modules[@]}"; do modprobe "$i"; done
 
-#  efifb_binding bind
-  vtcon_binding 1
-  host_allowed_cpus "$host_cpus_all"
-  systemctl start display-manager
-  systemctl restart nvidia-clocks
+	#  efifb_binding bind
+	vtcon_binding 1
+	host_allowed_cpus "$host_cpus_all"
+	systemctl start display-manager
+	systemctl restart nvidia-clocks
 }
 
-function main() {
-  if [[ "$#" -lt 2 ]]; then
-    return 1
-  fi
+main() {
+	if [[ "$#" -lt 2 ]]; then
+		return 1
+	fi
 
-  if [[ "$1" == "$guest_name" ]]; then
-    case "$2" in
-      "prepare") guest_prepare ;;
-      "release") guest_release ;;
-    esac
-  fi
+	if [[ "$1" == "$guest_name" ]]; then
+		case "$2" in
+			"prepare") guest_prepare ;;
+			"release") guest_release ;;
+		esac
+	fi
 }
 
 main "$@"
