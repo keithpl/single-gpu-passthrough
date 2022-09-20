@@ -85,8 +85,8 @@ guest_release() {
 	for i in "${node_devices[@]}"; do virsh nodedev-reattach "$i"; done
 	for i in "${nvidia_modules[@]}"; do modprobe "$i"; done
 
-	#  efifb_binding bind
-	vtcon_binding 1
+	#efifb_binding bind
+	#vtcon_binding 1
 	host_allowed_cpus "$host_cpus_all"
 	systemctl start display-manager
 	systemctl restart nvidia-clocks
