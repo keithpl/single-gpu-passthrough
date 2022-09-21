@@ -194,7 +194,7 @@ overhead.
 
 5. Do not expose the hypervisor to the guest.
 ```xml
-<cpu mode='host-model' check='partial'>
+<cpu mode='host-passthrough' check='partial'>
   <feature policy='disable' name='hypervisor'/>
 </cpu>
 ```
