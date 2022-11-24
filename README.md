@@ -96,7 +96,7 @@ options vfio-pci disable_vga=1
 
 ## Install QEMU, Libvirt, etc.
 ```
-# sudo pacman -S qemu libvirt edk2-ovmf dnsmasq dmidecode iptables-nft swtpm
+# sudo pacman -S qemu-base libvirt edk2-ovmf dnsmasq dmidecode iptables-nft swtpm
 # sudo systemctl enable libvirtd --now
 ```
 
