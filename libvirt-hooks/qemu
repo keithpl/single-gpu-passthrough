@@ -75,7 +75,8 @@ guest_prepare() {
 	efifb_binding unbind
 	host_allowed_cpus "$host_cpus_limited"
 
-	# Alacritty has decided to fully terminate on its own sometimes, cool.
+	# Alacritty has decided to not fully terminate on its own sometimes,
+	# cool.
 	while pgrep alacritty > /dev/null; do
 		pkill alacritty
 		sleep 0.050
