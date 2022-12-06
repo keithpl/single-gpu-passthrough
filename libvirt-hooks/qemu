@@ -65,7 +65,7 @@ modprobe_ensure() {
 	fi
 
 	while ! modprobe "$@"; do
-		sleep 0.1
+		sleep 0.050
 	done
 }
 
@@ -74,6 +74,12 @@ guest_prepare() {
 	vtcon_binding 0
 	efifb_binding unbind
 	host_allowed_cpus "$host_cpus_limited"
+
+	# Alacritty has decided to fully terminate on its own sometimes, cool.
+	while pgrep alacritty > /dev/null; do
+		pkill alacritty
+		sleep 0.050
+	done
 
 	for i in "${nvidia_modules[@]}"; do modprobe_ensure -r "$i"; done
 	for i in "${node_devices[@]}"; do virsh nodedev-detach "$i"; done
