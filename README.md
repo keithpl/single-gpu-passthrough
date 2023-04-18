@@ -153,7 +153,6 @@ for informational purposes.
 
 2. Pin guest vCPUs.
 ```xml
-<iothreads>1</iothreads>
 <cputune>
   <vcpupin vcpu='0' cpuset='0'/>
   <vcpupin vcpu='1' cpuset='1'/>
@@ -172,7 +171,6 @@ for informational purposes.
   <vcpupin vcpu='14' cpuset='14'/>
   <vcpupin vcpu='15' cpuset='15'/>
   <emulatorpin cpuset='16-23'/>
-  <iothreadpin iothread='1' cpuset='16-23'/>
 </cputune>
 ```
 
